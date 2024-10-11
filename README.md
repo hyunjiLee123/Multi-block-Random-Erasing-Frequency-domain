@@ -1,7 +1,7 @@
 # Multi block + Random Erasing in the Frequency domain
 ===============================================================
 
-### This code has the source code for the paper "[멀티 블록 기반 Random Erasing in the Frequency Domain](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003125682)".
+### This code has the source code for the paper </br> "[멀티 블록 기반 Random Erasing in the Frequency Domain](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003125682)".
 ### Other re-implementations
 
 [\[Official Torchvision in Transform\]](https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.RandomErasing)
