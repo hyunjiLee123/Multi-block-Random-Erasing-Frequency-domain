@@ -1,25 +1,7 @@
-# Random Erasing Data Augmentation
+# Multi block + Random Erasing in the Frequency domain
 ===============================================================
 
-![Examples](all_examples-page-001.jpg)
-
-| black  | white | random |
-|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-|![i1](img/001-black.gif)|![i2](img/001-white.gif)| ![i3](img/001-random.gif)|
-|![i4](img/002-black.gif)|![i5](img/002-white.gif)| ![i6](img/002-random.gif)|
-
-### This code has the source code for the paper "[Random Erasing Data Augmentation](https://arxiv.org/abs/1708.04896)".
-
-If you find this code useful in your research, please consider citing:
-
-    @inproceedings{zhong2020random,
-    title={Random Erasing Data Augmentation},
-    author={Zhong, Zhun and Zheng, Liang and Kang, Guoliang and Li, Shaozi and Yang, Yi},
-    booktitle={Proceedings of the AAAI Conference on Artificial Intelligence (AAAI)},
-    year={2020}
-    }
-
-
+### This code has the source code for the paper "[멀티 블록 기반 Random Erasing in the Frequency Domain](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003125682)".
 ### Other re-implementations
 
 [\[Official Torchvision in Transform\]](https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.RandomErasing)
@@ -53,6 +35,11 @@ ResNet-20 + Random Erasing on CIFAR10：
     python cifar.py --dataset cifar10 --arch resnet --depth 20 --p 0.5
     ```
 
+ResNet-20 + REF on CIFAR10：
+    ```
+    python cifar.py --dataset cifar10 --arch resnet --depth 20 --p 0.0 --p2 0.5
+    ```
+
 #### CIFAR100
 
 ResNet-20 baseline on CIFAR100：
@@ -63,6 +50,11 @@ ResNet-20 baseline on CIFAR100：
 ResNet-20 + Random Erasing on CIFAR100：
     ```
     python cifar.py --dataset cifar100 --arch resnet --depth 20 --p 0.5
+    ```
+
+ResNet-20 + REF on CIFAR100：
+    ```
+    python cifar.py --dataset cifar100 --arch resnet --depth 20 --p 0.0 --p2 0.5
     ```
 
 #### Fashion-MNIST
@@ -78,6 +70,7 @@ ResNet-20 + Random Erasing on Fashion-MNIST：
     python fashionmnist.py --dataset fashionmnist --arch resnet --depth 20 --p 0.5
     ```
 
+
 ### Other architectures
 
 For ResNet： 
@@ -90,26 +83,34 @@ For WRN：
     --arch wrn --depth 28 --widen-factor 10
     ```
 
-### Our results
+===============================================================
+#### Corruption data preparation
 
-You can reproduce the results in our paper:
+### CIFAR-10-C
 
-| |  CIFAR10 | CIFAR10| CIFAR100 | CIFAR100| Fashion-MNIST | Fashion-MNIST|
-| -----   | -----  | ----  | -----  | ----  | -----  | ----  |
-|Models |  Base. | +RE | Base. | +RE | Base. | +RE |
-|ResNet-20 |  7.21 | 6.73 | 30.84 | 29.97 | 4.39 | 4.02 |
-|ResNet-32 |  6.41 | 5.66 | 28.50 | 27.18 | 4.16 | 3.80 |
-|ResNet-44 |  5.53 | 5.13 | 25.27 | 24.29 | 4.41 | 4.01 |
-|ResNet-56 |  5.31 | 4.89| 24.82 | 23.69 | 4.39 | 4.13 |
-|ResNet-110 |  5.10 | 4.61 | 23.73 | 22.10 | 4.40 | 4.01 |
-|WRN-28-10 |  3.80 | 3.08 | 18.49 | 17.73 | 4.01 | 3.65 |
+Download CIFAR10-C dataset
 
-### NOTE THAT, if you use the latest released Fashion-MNIST, the performance of Baseline and RE will slightly lower than the results reported in our paper. Please refer to the [issue](https://github.com/zhunzhong07/Random-Erasing/issues/9).
+https://paperswithcode.com/dataset/cifar-10c
 
+### CIFAR-100-C
+
+Download CIFAR100-C dataset
+
+https://zenodo.org/records/3555552
 
 
-If you have any questions about this code, please do not hesitate to contact us.
+### Evaluation
+Clean Error and Corruption Error(Mean)
 
-[Zhun Zhong](http://zhunzhong.site)
+CIFAR10
+    ```
+    python cifar.py --resume [model_best.pth.tar path] --evaluate
+    ```
 
-[Liang Zheng](http://liangzheng.com.cn)
+CIFAR100
+    ```
+    python cifar.py --resume [model_best.pth.tar path] --evaluate --dataset cifar100
+    ```
+
+===============================================================
+
