@@ -2,20 +2,6 @@
 ===============================================================
 
 ### This code has the source code for the paper </br> "[멀티 블록 기반 Random Erasing in the Frequency Domain](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003125682)".
-### Other re-implementations
-
-[\[Official Torchvision in Transform\]](https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.RandomErasing)
-
-[\[Pytorch: Random Erasing for ImageNet\]](https://github.com/rwightman/pytorch-image-models)
-
-[\[Python Augmentor\]](http://augmentor.readthedocs.io/en/master/code.html#Augmentor.Pipeline.Pipeline.random_erasing)
-
-[\[Person_reID CamStyle\]](https://github.com/zhunzhong07/CamStyle)
-
-[\[Person_reID_baseline + Random Erasing + Re-ranking\]](https://github.com/layumi/Person_reID_baseline_pytorch)
-
-[\[Keras re-implementation\]](https://github.com/yu4u/cutout-random-erasing)
-
 
 ### Installation
 
