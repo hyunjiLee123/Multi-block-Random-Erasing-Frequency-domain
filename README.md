@@ -8,6 +8,10 @@
 
 Requirements for Pytorch （see [Pytorch](http://pytorch.org/) installation instructions）
 
+### Dataset
+
+You should download 'cifar10-c', 'cifar100-c', 'fmnist-c' dataset if you want to evaluate corruption error
+
 ### Examples:
 
 #### CIFAR10
