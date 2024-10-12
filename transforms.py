@@ -53,3 +53,57 @@ class RandomErasing(object):
 
         return img
 
+### MREF ###
+class FrequencyRandomErasing(object):
+    def __init__(self, probability=0.5):
+        self.probability = probability
+
+    def __call__(self, x):
+        if random.uniform(0, 1) > self.probability:
+            return x
+
+        ####nxn
+        n = 1                   # change here according to the conditions
+
+        a = [int(i * 32 / n) for i in range(n)]
+        b= a
+        c = a[1:]
+        d = a[1:]
+        c.append(32)
+        d.append(32)
+
+        image_list = []
+        for i in range(n):
+            for j in range(n):
+                imgcrop = x.crop((a[i], b[j], c[i], d[j]))
+                image_list.append(imgcrop)
+        ####
+
+        result_image_list = []
+        ##
+        for img in image_list:
+            img = np.array(img).astype(np.uint8)
+            fft_1 = np.fft.fftshift(np.fft.fftn(img))
+
+            # 랜덤 영역 뽑기
+            x_min = np.random.randint(0, 16//n)        # 16
+            x_max = np.random.randint(x_min+1, 32//n)        # 32
+            y_min = np.random.randint(0, 16//n)        # 16
+            y_max = np.random.randint(y_min+1, 32//n)        # 32
+            # RE
+            fft_1[x_min:x_max, y_min:y_max] = 0
+
+            img = np.fft.ifftn(np.fft.ifftshift(fft_1))
+            result_image_list.append(img)
+
+        ####nxn
+        row = []
+        for ii in range(n):
+            r = np.concatenate(result_image_list[ii * n : (ii + 1) * n], axis=0)
+            row.append(r)
+        new_image = np.concatenate(row, axis=1)
+        ####
+        x = np.clip(new_image, 0, 255).astype(np.uint8)
+        x = Image.fromarray(x)
+        # x.show()
+        return x

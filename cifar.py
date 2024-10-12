@@ -1,3 +1,31 @@
+# from __future__ import print_function
+#
+# import argparse
+# import os
+# import shutil
+# import time
+# import random
+#
+# import numpy as np
+# import torch
+# import torch.nn as nn
+# import torch.nn.parallel
+# import torch.backends.cudnn as cudnn
+# import torch.optim as optim
+# import torch.utils.data as data
+# from PIL.Image import Image
+# from PIL import Image
+# from torchvision.datasets import CIFAR10, CIFAR100
+#
+#
+# import transforms
+# import torchvision.datasets as datasets
+# import models.cifar as models
+#
+# from utils import Logger, AverageMeter, accuracy, mkdir_p, savefig
+# from torchvision import transforms
+# # Bar
+# from progress.bar import Bar
 from __future__ import print_function
 
 import argparse
@@ -6,12 +34,16 @@ import shutil
 import time
 import random
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data as data
+from PIL import Image
+from torchvision.datasets import CIFAR10
+
 import transforms
 import torchvision.datasets as datasets
 import models.cifar as models
@@ -27,7 +59,7 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 and 100 Training')
 # Datasets
 parser.add_argument('-d', '--dataset', default='cifar10', type=str)
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-                    help='number of data loading workers (default: 4)')
+                    help='number of data loading workers (default: 4)')             #TypeError: Caught TypeError in DataLoader worker process 0. 발생으로 0
 # Optimization options
 parser.add_argument('--epochs', default=300, type=int, metavar='N',
                     help='number of total epochs to run')
@@ -59,8 +91,8 @@ parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet',
                     help='model architecture: ' +
                         ' | '.join(model_names) +
                         ' (default: resnet20)')
-parser.add_argument('--depth', type=int, default=20, help='Model depth.')
-parser.add_argument('--widen-factor', type=int, default=10, help='Widen factor. 10')
+parser.add_argument('--depth', type=int, default=20, help='Model depth.')           #default=20
+parser.add_argument('--widen-factor', type=int, default=4, help='Widen factor. 10')
 parser.add_argument('--growthRate', type=int, default=12, help='Growth rate for DenseNet.')
 parser.add_argument('--compressionRate', type=int, default=2, help='Compression Rate (theta) for DenseNet.')
 # Miscs
@@ -69,9 +101,10 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 
 # Random Erasing
-parser.add_argument('--p', default=0, type=float, help='Random Erasing probability')
+parser.add_argument('--p', default=0.0, type=float, help='Random Erasing probability')      #default=0
 parser.add_argument('--sh', default=0.4, type=float, help='max erasing area')
 parser.add_argument('--r1', default=0.3, type=float, help='aspect of erasing area')
+parser.add_argument('--p2', default=0.5, type=float, help='random erasing in the frequency domain(REF) probability')    #default=0.5
 
 args = parser.parse_args()
 state = {k: v for k, v in args._get_kwargs()}
@@ -92,6 +125,45 @@ if use_cuda:
 
 best_acc = 0  # best test accuracy
 
+# new code
+# corruption data
+class CIFARC(datasets.CIFAR10):
+    def __init__(
+            self,
+            root,
+            key = 'zoom_blur',
+            transform = None,
+            target_transform = None,
+    ):
+
+        super(CIFAR10, self).__init__(root, transform=transform,
+                                      target_transform=target_transform)
+
+        data_path = os.path.join(root, key+'.npy')
+        labels_path = os.path.join(root, 'labels.npy')
+
+        self.data = np.load(data_path)
+        self.targets = np.load(labels_path)
+
+    def __getitem__(self, index: int):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        img, target = self.data[index], self.targets[index]
+
+        img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target
 def main():
     global best_acc
     start_epoch = args.start_epoch  # start from epoch 0 or last checkpoint epoch
@@ -106,10 +178,12 @@ def main():
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
+        transforms.FrequencyRandomErasing(probability=args.p2),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        transforms.RandomErasing(probability = args.p, sh = args.sh, r1 = args.r1, ),
+        transforms.RandomErasing(probability=args.p, sh=args.sh, r1=args.r1, ),
     ])
+
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -118,18 +192,31 @@ def main():
     if args.dataset == 'cifar10':
         dataloader = datasets.CIFAR10
         num_classes = 10
+        droot = '/home/hyunji/Documents/Random-Erasing-master/CIFAR-10-C'
     else:
         dataloader = datasets.CIFAR100
         num_classes = 100
+        droot = '/home/hyunji/Documents/Random-Erasing-master/CIFAR-100-C'
 
 
     trainset = dataloader(root='./data', train=True, download=True, transform=transform_train)
+    # trainset = dataloader(root='./data', train=True, download=True, transform=FreqTune_stdAug)
     trainloader = data.DataLoader(trainset, batch_size=args.train_batch, shuffle=True, num_workers=args.workers)
 
     testset = dataloader(root='./data', train=False, download=False, transform=transform_test)
     testloader = data.DataLoader(testset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers)
 
-    # Model   
+    outkeys = ['gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
+               'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
+               'brightness', 'contrast', 'elastic_transform', 'pixelate',
+               'jpeg_compression']
+    outloaders = dict()
+    for key in outkeys:
+        outset = CIFARC(root=droot, key=key, transform=transform_test)
+        outloader = data.DataLoader(outset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers)
+        outloaders[key] = outloader
+
+    # Model
     print("==> creating model '{}'".format(args.arch))
     if args.arch.startswith('wrn'):
         model = models.__dict__[args.arch](
@@ -172,7 +259,15 @@ def main():
     if args.evaluate:
         print('\nEvaluation only')
         test_loss, test_acc = test(testloader, model, criterion, start_epoch, use_cuda)
-        print(' Test Loss:  %.8f, Test Acc:  %.2f' % (test_loss, test_acc))
+        print(' Test Loss:  %.8f, Test Acc:  %.2f, Test Error:  %.2f' % (test_loss, test_acc, (100-test_acc)))
+
+        acc_res = []
+        for key in outkeys:
+            test_loss, test_acc = test(outloaders[key], model, criterion, start_epoch, use_cuda)
+            print('%s: Test Loss:  %.8f, Test Acc:  %.2f, Test Error:  %.2f' % (key, test_loss, test_acc, (100-test_acc)))
+            acc_res.append(test_acc)
+        print('Mean ACC:  %.2f' % np.mean(acc_res))
+        print('Mean Error:  %.2f' % (100 - np.mean(acc_res)))
         return
 
     # Train and val
@@ -222,7 +317,8 @@ def train(trainloader, model, criterion, optimizer, epoch, use_cuda):
         data_time.update(time.time() - end)
 
         if use_cuda:
-            inputs, targets = inputs.cuda(), targets.cuda(async=True)
+            # inputs, targets = inputs.cuda(), targets.cuda(async=True)
+            inputs, targets = inputs.cuda(), targets.cuda(non_blocking = True)
         inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
 
         # compute output
@@ -277,7 +373,7 @@ def test(testloader, model, criterion, epoch, use_cuda):
     for batch_idx, (inputs, targets) in enumerate(testloader):
         # measure data loading time
         data_time.update(time.time() - end)
-
+        targets = targets.long()
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
         inputs, targets = torch.autograd.Variable(inputs, volatile=True), torch.autograd.Variable(targets)
@@ -285,6 +381,7 @@ def test(testloader, model, criterion, epoch, use_cuda):
         # compute output
         outputs = model(inputs)
         loss = criterion(outputs, targets)
+
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
