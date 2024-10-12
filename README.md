@@ -2,6 +2,7 @@
 ===============================================================
 
 ### This code has the source code for the paper </br> "[멀티 블록 기반 Random Erasing in the Frequency Domain](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003125682)".
+### Previous literature </br> "[Improving Corruption Robustness with Random Erasing in the Frequency Domain](https://github.com/hyunjiLee123/Random-Erasing-in-the-Frequency-domain)".
 
 ### Installation
 
